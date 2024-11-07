@@ -23,3 +23,6 @@ Open Command Prompt or Terminal and install the necessary packages using the fol
 
 ```bash
 pip install selenium
+```
+## Usage
+Open Command Prompt or Terminal in the folder and use the command python main.py.
