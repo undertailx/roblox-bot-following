@@ -10,7 +10,7 @@ Following Bot is a bot that uses Selenium to log into Roblox and automatically f
 ## What can Following Bot do?
 - Automatically log into Roblox account
 - Randomly follow users
-- Supports browsers Chrome, Safari, and Firefox
+- Supports browsers Chrome, Safari, Firefox, and Edge
 
 ## Installation
 Before you start using this script, make sure you have Python and the required packages installed.
