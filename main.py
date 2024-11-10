@@ -6,7 +6,7 @@ import time
 import random
 
 # รับข้อมูลจากผู้ใช้ (Prompt user for input)
-putBrowser = input("Please enter the number to choose your browser (1 is Chrome, 2 is Safari, 3 is Firefox): ")
+putBrowser = input("Please enter the number to choose your browser (1 Chrome, 2 Safari, 3 Firefox, 4 Edge): ")
 putUsername = input("Type your Roblox Account username here: ")
 putPassword = input("Type Roblox Account Password here: ")
 
@@ -21,6 +21,9 @@ match putBrowser:
     case "3":
         print("Ok. Starting Firefox... ")
         browser = webdriver.Firefox()  # เปิดเบราว์เซอร์ Firefox
+    case "4":
+        print("Ok. Starting Edge... ")
+        browser = webdriver.Edge()  # เปิดเบราว์เซอร์ Edge
     case _:
         print("Unknown browser!")  # หากเลือกเบราว์เซอร์ไม่ถูกต้อง จะหยุดโปรแกรม
         exit()
@@ -65,8 +68,10 @@ while True:
 
         # หาปุ่ม Follow โดยใช้ XPath (Find the Follow button using XPath)
         followUser = WebDriverWait(browser, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//a[contains(text(), 'Follow')]"))
+        EC.element_to_be_clickable((By.XPATH, "//a[@role='menuitem' and @tabindex='-1' and contains(@href, '#')]"))
         )
+
+
         followUser.click()  # คลิกปุ่ม Follow (Click the Follow button)
         print("FOLLOWED! Moving to next random ID...")
 
