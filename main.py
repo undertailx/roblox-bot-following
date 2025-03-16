@@ -5,78 +5,74 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import random
 
-# รับข้อมูลจากผู้ใช้ (Prompt user for input)
+# 获取用户输入 (Prompt user for input)
 putBrowser = input("Please enter the number to choose your browser (1 Chrome, 2 Safari, 3 Firefox, 4 Edge): ")
 putUsername = input("Type your Roblox Account username here: ")
 putPassword = input("Type Roblox Account Password here: ")
 
-# เลือกเบราว์เซอร์ที่ต้องการใช้งาน (Select the browser based on user input)
+# 选择浏览器 (Select the browser based on user input)
 match putBrowser:
     case "1":
         print("Ok. Starting Chrome... ")
-        browser = webdriver.Chrome()  # เปิดเบราว์เซอร์ Chrome
+        browser = webdriver.Chrome()  
     case "2":
         print("Ok. Starting Safari... ")
-        browser = webdriver.Safari()  # เปิดเบราว์เซอร์ Safari
+        browser = webdriver.Safari()  
     case "3":
         print("Ok. Starting Firefox... ")
-        browser = webdriver.Firefox()  # เปิดเบราว์เซอร์ Firefox
+        browser = webdriver.Firefox()  
     case "4":
         print("Ok. Starting Edge... ")
-        browser = webdriver.Edge()  # เปิดเบราว์เซอร์ Edge
+        browser = webdriver.Edge()  
     case _:
-        print("Unknown browser!")  # หากเลือกเบราว์เซอร์ไม่ถูกต้อง จะหยุดโปรแกรม
+        print("Unknown browser!")  
         exit()
 
-# เข้าสู่ระบบ Roblox (Navigate to the Roblox login page)
+# 访问 Roblox 登录页面 (Navigate to the Roblox login page)
 print("Logging in... ")
 browser.get("https://roblox.com/login")
 
-# รอให้ input field สำหรับ username และ password โหลดขึ้นมา (Wait for the username and password fields to load)
+# 等待输入框加载 (Wait for the username and password fields to load)
 WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "login-username")))
-username = browser.find_element(By.ID, "login-username")  # หา input field สำหรับ username
-password = browser.find_element(By.ID, "login-password")  # หา input field สำหรับ password
+username = browser.find_element(By.ID, "login-username")
+password = browser.find_element(By.ID, "login-password")
 
-# กรอก username และ password (Enter the username and password into the respective fields)
+# 输入用户名和密码 (Enter username and password)
 username.send_keys(putUsername)
 password.send_keys(putPassword)
 
-# คลิกปุ่มล็อกอิน (Click the login button)
+# 点击登录按钮 (Click the login button)
 loginBtn = browser.find_element(By.ID, "login-button")
 loginBtn.click()
 
-# รอให้เข้าสู่ระบบสำเร็จ (Wait for the login process to complete)
+# 等待登录完成 (Wait for the login process to complete)
 time.sleep(10)
 
-# ลูปสำหรับการติดตามผู้ใช้แบบสุ่ม (Loop for following a random user)
+# 开始循环随机关注用户 (Loop for following a random user)
 while True:
-    # สุ่มเลือก ID ผู้ใช้ (Randomly select a user ID)
-    idRandom = random.randint(100000000, 1000000000)  # สามารถปรับช่วง ID ได้ตามต้องการ (Adjust the ID range as needed)
+    # 生成随机用户 ID (Generate a random user ID)
+    idRandom = random.randint(100000000, 1000000000)
     print("Following user with ID:", idRandom)
 
-    # เข้าหน้าของผู้ใช้ที่ต้องการติดตาม (Go to the user's page that we want to follow)
+    # 访问用户页面 (Go to the user's profile page)
     browser.get(f"https://roblox.com/users/{idRandom}")
 
     try:
-        # รอให้ตัวเลือกผู้ใช้โหลดขึ้นมา (Wait for the user options to load)
+        # 等待 "More" 按钮加载并点击 (Wait for the "More" button to appear and click it)
         WebDriverWait(browser, 10).until(
-            EC.element_to_be_clickable((By.ID, "popover-link"))
-        )
-        userOptions = browser.find_element(By.ID, "popover-link")
-        userOptions.click()  # คลิกที่ตัวเลือกของผู้ใช้ (Click on the user options)
-        time.sleep(2)
+            EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='More']"))
+        ).click()
+        time.sleep(2)  # 等待菜单展开
 
-        # หาปุ่ม Follow โดยใช้ XPath (Find the Follow button using XPath)
+        # 等待并点击 "Follow" 按钮 (Wait for and click the "Follow" button)
         followUser = WebDriverWait(browser, 10).until(
-        EC.element_to_be_clickable((By.XPATH, "//a[@role='menuitem' and @tabindex='-1' and contains(@href, '#')]"))
+            EC.element_to_be_clickable((By.XPATH, "//li[.//span[text()='Follow']]"))
         )
-
-
-        followUser.click()  # คลิกปุ่ม Follow (Click the Follow button)
+        followUser.click()
         print("FOLLOWED! Moving to next random ID...")
 
     except Exception as e:
-        print("Could not follow user with ID:", idRandom, "Error:", e)  # แสดงข้อความหากไม่สามารถติดตามผู้ใช้ได้ (Print error if unable to follow the user)
+        print(f"Could not follow user with ID {idRandom}. Error: {e}")
 
-    # หน่วงเวลา 3 วินาทีก่อนสุ่มติดตามผู้ใช้ถัดไป (Wait for 3 seconds before following the next user)
+    # 等待 3 秒后执行下一个操作 (Wait for 3 seconds before following the next user)
     time.sleep(3)
