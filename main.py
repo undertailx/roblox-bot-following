@@ -51,7 +51,7 @@ time.sleep(10)
 # 开始循环随机关注用户 (Loop for following a random user)
 while True:
     # 生成随机用户 ID (Generate a random user ID)
-    idRandom = random.randint(100000000, 1000000000)
+    idRandom = random.randint(1500000001, 8162450098)
     print("Following user with ID:", idRandom)
 
     # 访问用户页面 (Go to the user's profile page)
