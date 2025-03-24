@@ -28,14 +28,12 @@ match putBrowser:
 
     case "3":  # **Firefox**
         print("Ok. Starting Firefox with Proxy... ")
-        firefox_options = webdriver.FirefoxOptions()
-        firefox_profile = webdriver.FirefoxProfile()
-        firefox_profile.set_preference("network.proxy.type", 1)
-        firefox_profile.set_preference("network.proxy.http", "127.0.0.1")
-        firefox_profile.set_preference("network.proxy.http_port", 7897)
-        firefox_profile.set_preference("network.proxy.ssl", "127.0.0.1")
-        firefox_profile.set_preference("network.proxy.ssl_port", 7897)
-        browser = webdriver.Firefox(options=firefox_options, firefox_profile=firefox_profile)
+        firefox_options = Options()
+        firefox_options.set_preference("network.proxy.type", 1)
+        firefox_options.set_preference("network.proxy.http", "127.0.0.1")
+        firefox_options.set_preference("network.proxy.http_port", 7897)
+        firefox_options.set_preference("network.proxy.ssl", "127.0.0.1")
+        firefox_options.set_preference("network.proxy.ssl_port", 7897)
 
     case "4":  # **Edge**
         print("Ok. Starting Edge with Proxy... ")
