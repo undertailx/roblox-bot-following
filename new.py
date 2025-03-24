@@ -5,7 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import random
 import re  # 用于解析好友数
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.options import Options  # ✅ 不需要重复导入
 
 # 代理服务器地址
 proxy = "127.0.0.1:7897"
@@ -16,36 +16,37 @@ putUsername = input("Type your Roblox Account username here: ")
 putPassword = input("Type Roblox Account Password here: ")
 
 # 选择浏览器
-match putBrowser:
-    case "1":  # **Chrome**
-        print("Ok. Starting Chrome with Proxy... ")
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument(f"--proxy-server={proxy}")
-        browser = webdriver.Chrome(options=chrome_options)
+browser = None  # 预定义变量，避免作用域问题
+if putBrowser == "1":  # **Chrome**
+    print("Ok. Starting Chrome with Proxy... ")
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument(f"--proxy-server={proxy}")
+    browser = webdriver.Chrome(options=chrome_options)
 
-    case "2":  # **Safari（不支持 Selenium 直接配置代理，需手动设置）**
-        print("Ok. Starting Safari... (Note: Proxy must be set manually in system settings)")
-        browser = webdriver.Safari()
+elif putBrowser == "2":  # **Safari**
+    print("Ok. Starting Safari... (Note: Proxy must be set manually in system settings)")
+    browser = webdriver.Safari()
 
-    case "3":  # **Firefox**
-        print("Ok. Starting Firefox with Proxy... ")
-        from selenium.webdriver.firefox.options import Options  # 导入 Options
-        firefox_options = Options()
-        firefox_options.set_preference("network.proxy.type", 1)
-        firefox_options.set_preference("network.proxy.http", "127.0.0.1")
-        firefox_options.set_preference("network.proxy.http_port", 7897)
-        firefox_options.set_preference("network.proxy.ssl", "127.0.0.1")
-        firefox_options.set_preference("network.proxy.ssl_port", 7897)
+elif putBrowser == "3":  # **Firefox**
+    print("Ok. Starting Firefox with Proxy... ")
+    firefox_options = Options()
+    firefox_options.set_preference("network.proxy.type", 1)
+    firefox_options.set_preference("network.proxy.http", "127.0.0.1")
+    firefox_options.set_preference("network.proxy.http_port", 7897)
+    firefox_options.set_preference("network.proxy.ssl", "127.0.0.1")
+    firefox_options.set_preference("network.proxy.ssl_port", 7897)
+    
+    browser = webdriver.Firefox(options=firefox_options)  # ✅ 这里正确初始化 `browser`
 
-    case "4":  # **Edge**
-        print("Ok. Starting Edge with Proxy... ")
-        edge_options = webdriver.EdgeOptions()
-        edge_options.add_argument(f"--proxy-server={proxy}")
-        browser = webdriver.Edge(options=edge_options)
+elif putBrowser == "4":  # **Edge**
+    print("Ok. Starting Edge with Proxy... ")
+    edge_options = webdriver.EdgeOptions()
+    edge_options.add_argument(f"--proxy-server={proxy}")
+    browser = webdriver.Edge(options=edge_options)
 
-    case _:
-        print("Unknown browser!")
-        exit()
+else:
+    print("Unknown browser!")
+    exit()
 
 try:
     # 访问 Roblox 登录页面
@@ -133,4 +134,5 @@ except Exception as e:
 
 finally:
     # 关闭浏览器，释放资源
-    browser.quit()
+    if browser:
+        browser.quit()
