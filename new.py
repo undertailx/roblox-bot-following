@@ -5,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import random
 import re  # 用于解析好友数
+from selenium.webdriver.firefox.options import Options
 
 # 代理服务器地址
 proxy = "127.0.0.1:7897"
@@ -28,6 +29,7 @@ match putBrowser:
 
     case "3":  # **Firefox**
         print("Ok. Starting Firefox with Proxy... ")
+        from selenium.webdriver.firefox.options import Options  # 导入 Options
         firefox_options = Options()
         firefox_options.set_preference("network.proxy.type", 1)
         firefox_options.set_preference("network.proxy.http", "127.0.0.1")
