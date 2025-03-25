@@ -4,19 +4,20 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import random
-import re  # 用于解析好友数
-from selenium.webdriver.firefox.options import Options  # ✅ 不需要重复导入
+import re  
+from selenium.webdriver.firefox.options import Options  
 
 # 代理服务器地址
 proxy = "127.0.0.1:7897"
 
-# 获取用户输入
-putBrowser = input("Please enter the number to choose your browser (1 Chrome, 2 Safari, 3 Firefox, 4 Edge): ")
-putUsername = input("Type your Roblox Account username here: ")
-putPassword = input("Type Roblox Account Password here: ")
+# 固定用户名和密码
+putUsername = "UN111068676"
+putPassword = "Tg112211"
 
 # 选择浏览器
-browser = None  # 预定义变量，避免作用域问题
+putBrowser = input("Please enter the number to choose your browser (1 Chrome, 2 Safari, 3 Firefox, 4 Edge): ")
+browser = None  
+
 if putBrowser == "1":  # **Chrome**
     print("Ok. Starting Chrome with Proxy... ")
     chrome_options = webdriver.ChromeOptions()
@@ -36,7 +37,7 @@ elif putBrowser == "3":  # **Firefox**
     firefox_options.set_preference("network.proxy.ssl", "127.0.0.1")
     firefox_options.set_preference("network.proxy.ssl_port", 7897)
     
-    browser = webdriver.Firefox(options=firefox_options)  # ✅ 这里正确初始化 `browser`
+    browser = webdriver.Firefox(options=firefox_options)  
 
 elif putBrowser == "4":  # **Edge**
     print("Ok. Starting Edge with Proxy... ")
@@ -87,10 +88,10 @@ try:
                 print(f"User {idRandom} does not exist (404). Skipping to next user.")
                 continue
         except:
-            pass  # 如果未找到 404 错误，则继续执行后续逻辑
+            pass  
 
         try:
-            # 等待 "Add Friend" 按钮加载完毕，确保页面完全加载
+            # 等待 "Add Friend" 按钮加载完毕
             WebDriverWait(browser, 10).until(
                 EC.presence_of_element_located((By.XPATH, "//span[contains(@class, 'web-blox-css-tss-1283320-Button-textContainer') and text()='Add Friend']"))
             )
