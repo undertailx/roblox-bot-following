@@ -16,6 +16,20 @@ print("Ok. Starting Firefox ")
 firefox_options = Options()
 browser = webdriver.Firefox(options=firefox_options)  
 
+def refresh_page_if_timeout():
+    """
+    Function to check if a page is loading for more than 60 seconds, and refresh it if so.
+    """
+    try:
+        # Wait for a specific element on the page (this element should always be present for a loaded page)
+        WebDriverWait(browser, 60).until(
+            EC.presence_of_element_located((By.ID, "friend-button"))
+        )
+    except:
+        print("Page load timeout, refreshing page.")
+        browser.refresh()
+        time.sleep(5)  # Wait a few seconds to let the page reload
+
 try:
     # 访问 Roblox 登录页面
     print("Logging in... ")
@@ -38,15 +52,18 @@ try:
         # 访问用户页面
         browser.get(f"https://roblox.com/users/{idRandom}")
 
+        # **先检查是否是404页面**
         try:
-            # 检测是否是 404 页面
             error_element = WebDriverWait(browser, 3).until(
                 EC.presence_of_element_located((By.XPATH, "//h3[contains(text(), 'Page cannot be found')]"))
             )
             print(f"User {idRandom} does not exist. Skipping.")
-            continue
+            continue  # Skip this user if it's a 404 error
         except:
-            pass  # 没有找到 404 提示，说明用户页面存在
+            pass  # No error element found, user page exists
+
+        # **调用页面加载超时处理函数**
+        refresh_page_if_timeout()
 
         try:
             # **等待 "Add Friend" 按钮加载**，确保页面已完全加载
