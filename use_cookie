@@ -1,0 +1,59 @@
+import requests
+import re
+
+# Roblox 登录 Cookie（不要泄露）
+ROBLOSECURITY = "GuestData=UserID=-249561000; _ga=GA1.1.662990136.1743168943; _ga_BK4ZY0C59K=GS1.1.1743168979.1.1.1743169660.0.0.0; rbxas=1e8a8b30b2a87142b3dc72a90af6e4e4dac6a057b1e43f9da749bca481d76942; RBXEventTrackerV2=CreateDate=04/26/2025 08:53:13&rbxid=2468179858&browserid=1743168939575001; _ga_F8VP9T1NT3=GS1.1.1745679611.4.1.1745680176.0.0.0; RBXSource=rbx_acquisition_time=04/28/2025 03:12:37&rbx_acquisition_referrer=&rbx_medium=Social&rbx_source=&rbx_campaign=&rbx_adgroup=&rbx_keyword=&rbx_matchtype=&rbx_send_info=0; .ROBLOSECURITY=_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_28136EBBE468D488A5DD1B1D85FE9B4D4242A768D33A885FF166A4916EA1B57B40EEF34C74763F190FE3C526EF276E9B5724E852CB920CC0A8CD5AAA1955035889C0BBF31B740A50247F5327175B91D4FBB08966F0822BD53071347BBAE7856B3BEE4B71342CAEC0A30E95D3548FD888E8ECDB5AD9599CFBE2C510941C3412F0B0C66874916A804408EA7B067F3CBCE1D58519509F59F6F54F3F6DC16117C48AB36CBCC00A96F66429AB431EF5CF4DB70321426888A98A317DC03925C255AD3B23CE02EB08569CDE3348E546756482BABC7AD9059390944D3251C413E3AD5942B8CB5F22979A57A81688FF81DD8A0A7AAD04154DAC4D8305C30E45F5DF9BD09366F60B710BCC3B773E30057CCF9737D1DAFDF0607440DE91A1A34FB47BB3792D92E033212C5F0BCAC3BAE36499B484EBBD08442F16B58FC59750CBF5E502762A42405389413ECA3B49D1BB397A7F33DBEAC477453843B2F9926B2CFF023A91C9F9A905707D90BFB73978EE2AF7ECFB1F5AEC2CA246438DB899534E7491D9653DFF58A3B4FEF709C667185CF05FC5B806A522FB9152B7389A2A97B4DCB8280607E03524F298903E7A25426726B8C51555480A538DD0A0B8CB780A19D321149136897992F8D8BC419D00F499407B6C548E3D6104BA7A58D9BFC53C0888A37DB69C8AB2AC2EBA682D35FE99CF0B9DADE0259FB7C01EED7C69E846BF394E476442538843CA4DCFD6D87EE672908A9166EB50B5788D2222A7CE87B2B83D6E97349F77C67174DA5E8267525BA523C3813B49034FCB57F2EF6F9C26ABCE9552FB510FEBECB428217E50F95032F43CF3B32EE2D818A7ED9D2C5C7995DF53D7196E1C6B47B5FF9C56DE77C1FF9562F5F83D661AD7ABF2766D09D62E8DCEE168B903ABF55137176B94C97747DCFD0E34E3BF660189F3E0055C82CD7E13E874EA8A058AF15989C37C778CD7CAA93A31A4EE118353F2881FB2BF7AE6B279EBD96697E0B8FA10FB40CA63052EF7EC5D4D6E3DC04864F78A3A81FFC4C2EFF69B0DA24475B7D2B01DB1952BF5736E2E429A41DCB1945024142E99C85A726619E8EB938924746C80C6BF2A822B2FDE217B5C710FC68979104FDE8C2EF1AB6EAECE24238C1D9E493C577DE9B0; rbx-ip2=1; RBXSessionTracker=sessionid=1d46327d-90cc-4da8-b662-b433b62aed72; _ga_9HRYHVCY79=GS1.1.1745993853.1.0.1745993853.0.0.0"
+
+# 初始化 Session
+session = requests.Session()
+session.cookies.set('.ROBLOSECURITY', ROBLOSECURITY, domain='.roblox.com')
+session.headers.update({
+    'User-Agent': 'Roblox/WinInet',
+    'Referer': 'https://www.roblox.com'
+})
+
+def get_csrf_token():
+    """ 获取 X-CSRF-TOKEN """
+    resp = session.post("https://auth.roblox.com/v2/logout")
+    token = resp.headers.get('x-csrf-token')
+    if not token:
+        print("[!] 获取 CSRF Token 失败。请检查 Cookie 是否有效。")
+        print("状态码:", resp.status_code, "响应内容:", resp.text)
+        return None
+    session.headers['X-CSRF-TOKEN'] = token
+    print("[+] 获取 CSRF Token 成功")
+    return token
+
+def extract_user_id(url):
+    """ 从用户资料链接中提取 ID """
+    match = re.search(r'/users/(\d+)/', url)
+    if match:
+        return match.group(1)
+    return None
+
+def follow_user(user_id):
+    """ 发起关注请求 """
+    url = f"https://friends.roblox.com/v1/users/{user_id}/follow"
+    resp = session.post(url)
+    if resp.status_code == 200:
+        print(f"[+] 成功关注用户 {user_id}")
+    else:
+        print(f"[!] 关注失败: 状态码 {resp.status_code}, 响应: {resp.text}")
+
+if __name__ == "__main__":
+    print("Roblox 自动关注脚本，输入用户资料链接进行关注。输入 q 退出。")
+    if not get_csrf_token():
+        exit(1)
+
+    while True:
+        try:
+            url = input("请输入用户链接 (或输入 q 退出): ").strip()
+            if url.lower() == 'q':
+                break
+            user_id = extract_user_id(url)
+            if user_id:
+                follow_user(user_id)
+            else:
+                print("[!] 无法解析用户 ID，请检查链接格式")
+        except KeyboardInterrupt:
+            break
