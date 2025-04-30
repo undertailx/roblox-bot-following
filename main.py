@@ -4,79 +4,113 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import random
+import re  
+from selenium.webdriver.firefox.options import Options  
 
-# รับข้อมูลจากผู้ใช้ (Prompt user for input)
-putBrowser = input("Please enter the number to choose your browser (1 Chrome, 2 Safari, 3 Firefox, 4 Edge): ")
-putUsername = input("Type your Roblox Account username here: ")
-putPassword = input("Type Roblox Account Password here: ")
+# 固定用户名和密码
+putUsername = "typeyourusernamehere"
+putPassword = "typeyourpasswordhere"
 
-# เลือกเบราว์เซอร์ที่ต้องการใช้งาน (Select the browser based on user input)
-match putBrowser:
-    case "1":
-        print("Ok. Starting Chrome... ")
-        browser = webdriver.Chrome()  # เปิดเบราว์เซอร์ Chrome
-    case "2":
-        print("Ok. Starting Safari... ")
-        browser = webdriver.Safari()  # เปิดเบราว์เซอร์ Safari
-    case "3":
-        print("Ok. Starting Firefox... ")
-        browser = webdriver.Firefox()  # เปิดเบราว์เซอร์ Firefox
-    case "4":
-        print("Ok. Starting Edge... ")
-        browser = webdriver.Edge()  # เปิดเบราว์เซอร์ Edge
-    case _:
-        print("Unknown browser!")  # หากเลือกเบราว์เซอร์ไม่ถูกต้อง จะหยุดโปรแกรม
-        exit()
+# 启动 Firefox 浏览器
+print("Ok. Starting Firefox ")
+firefox_options = Options()
+browser = webdriver.Firefox(options=firefox_options)  
 
-# เข้าสู่ระบบ Roblox (Navigate to the Roblox login page)
-print("Logging in... ")
-browser.get("https://roblox.com/login")
-
-# รอให้ input field สำหรับ username และ password โหลดขึ้นมา (Wait for the username and password fields to load)
-WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "login-username")))
-username = browser.find_element(By.ID, "login-username")  # หา input field สำหรับ username
-password = browser.find_element(By.ID, "login-password")  # หา input field สำหรับ password
-
-# กรอก username และ password (Enter the username and password into the respective fields)
-username.send_keys(putUsername)
-password.send_keys(putPassword)
-
-# คลิกปุ่มล็อกอิน (Click the login button)
-loginBtn = browser.find_element(By.ID, "login-button")
-loginBtn.click()
-
-# รอให้เข้าสู่ระบบสำเร็จ (Wait for the login process to complete)
-time.sleep(10)
-
-# ลูปสำหรับการติดตามผู้ใช้แบบสุ่ม (Loop for following a random user)
-while True:
-    # สุ่มเลือก ID ผู้ใช้ (Randomly select a user ID)
-    idRandom = random.randint(100000000, 1000000000)  # สามารถปรับช่วง ID ได้ตามต้องการ (Adjust the ID range as needed)
-    print("Following user with ID:", idRandom)
-
-    # เข้าหน้าของผู้ใช้ที่ต้องการติดตาม (Go to the user's page that we want to follow)
-    browser.get(f"https://roblox.com/users/{idRandom}")
-
+def refresh_page_if_timeout():
+    """
+    Function to check if a page is loading for more than 60 seconds, and refresh it if so.
+    """
     try:
-        # รอให้ตัวเลือกผู้ใช้โหลดขึ้นมา (Wait for the user options to load)
-        WebDriverWait(browser, 10).until(
-            EC.element_to_be_clickable((By.ID, "popover-link"))
+        # Wait for a specific element on the page (this element should always be present for a loaded page)
+        WebDriverWait(browser, 60).until(
+            EC.presence_of_element_located((By.ID, "friend-button"))
         )
-        userOptions = browser.find_element(By.ID, "popover-link")
-        userOptions.click()  # คลิกที่ตัวเลือกของผู้ใช้ (Click on the user options)
-        time.sleep(2)
+    except:
+        print("Page load timeout, refreshing page.")
+        browser.refresh()
+        time.sleep(5)  # Wait a few seconds to let the page reload
 
-        # หาปุ่ม Follow โดยใช้ XPath (Find the Follow button using XPath)
-        followUser = WebDriverWait(browser, 10).until(
-        EC.element_to_be_clickable((By.XPATH, "//a[@role='menuitem' and @tabindex='-1' and contains(@href, '#')]"))
-        )
+try:
+    # 访问 Roblox 登录页面
+    print("Logging in... ")
+    browser.get("https://roblox.com/login")
 
+    # 等待用户名输入框加载，并输入信息
+    WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "login-username"))).send_keys(putUsername)
+    browser.find_element(By.ID, "login-password").send_keys(putPassword)
+    browser.find_element(By.ID, "login-button").click()
 
-        followUser.click()  # คลิกปุ่ม Follow (Click the Follow button)
-        print("FOLLOWED! Moving to next random ID...")
+    # 等待登录完成
+    time.sleep(10)
 
-    except Exception as e:
-        print("Could not follow user with ID:", idRandom, "Error:", e)  # แสดงข้อความหากไม่สามารถติดตามผู้ใช้ได้ (Print error if unable to follow the user)
+    # 开始循环随机关注用户
+    while True:
+        # 生成随机用户 ID
+        idRandom = random.randint(1500000001, 8214240812)
+        print(f"Checking user with ID: {idRandom}")
 
-    # หน่วงเวลา 3 วินาทีก่อนสุ่มติดตามผู้ใช้ถัดไป (Wait for 3 seconds before following the next user)
-    time.sleep(3)
+        # 访问用户页面
+        browser.get(f"https://roblox.com/users/{idRandom}")
+
+        # **先检查是否是404页面**
+        try:
+            error_element = WebDriverWait(browser, 3).until(
+                EC.presence_of_element_located((By.XPATH, "//h3[contains(text(), 'Page cannot be found')]"))
+            )
+            print(f"User {idRandom} does not exist. Skipping.")
+            continue  # Skip this user if it's a 404 error
+        except:
+            pass  # No error element found, user page exists
+
+        # **调用页面加载超时处理函数**
+        refresh_page_if_timeout()
+
+        try:
+            # **等待 "Add Friend" 按钮加载**，确保页面已完全加载
+            add_friend_button = WebDriverWait(browser, 10).until(
+                EC.presence_of_element_located((By.ID, "friend-button"))
+            )
+
+            # **获取好友数**
+            friend_count_element = WebDriverWait(browser, 10).until(
+                EC.presence_of_element_located((By.XPATH, "//a[contains(@href, '/friends')]/span/b"))
+            )
+            friend_count = int(re.search(r"\d+", friend_count_element.text).group())
+
+            print(f"User {idRandom} has {friend_count} friends.")
+
+            # **如果好友数小于 20，则跳过该用户**
+            if friend_count < 20:
+                print("Skipping user due to insufficient friends.")
+                continue
+        
+        except Exception as e:
+            print(f"Error fetching friend count for user {idRandom}: {e}")
+            continue
+
+        try:
+            # **点击 "More" 按钮**
+            more_button = WebDriverWait(browser, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(@aria-label, 'See More')]"))
+            )
+            more_button.click()
+
+            # **等待并点击 "Follow" 按钮**
+            followUser = WebDriverWait(browser, 10).until(
+                EC.element_to_be_clickable((By.ID, "follow-button"))
+            )
+            followUser.click()
+            print(f"FOLLOWED user {idRandom}!")
+
+        except Exception as e:
+            print(f"Could not follow user {idRandom}. Error: {e}")
+
+        # 等待 3 秒后执行下一个用户
+        time.sleep(3)
+
+except Exception as e:
+    print(f"Critical error: {e}")
+
+finally:
+    # 关闭浏览器
+    browser.quit()

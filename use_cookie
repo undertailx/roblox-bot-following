@@ -1,0 +1,59 @@
+import requests
+import re
+
+# Roblox 登录 Cookie（不要泄露）
+ROBLOSECURITY = "GuestData=UserID=-249561000; _ga=GA1.1.662990136.1743168943; RBXcb=RBXViralAcquisition=true&RBXSource=true&GoogleAnalytics=true; _ga_BK4ZY0C59K=GS1.1.1743168979.1.1.1743169660.0.0.0; __stripe_mid=d90775b4-12f3-49aa-9efd-dabe9a09545afb1f5b; _ga_F8VP9T1NT3=GS1.1.1745679611.4.1.1745680176.0.0.0; RBXSource=rbx_acquisition_time=04/28/2025 03:12:37&rbx_acquisition_referrer=&rbx_medium=Social&rbx_source=&rbx_campaign=&rbx_adgroup=&rbx_keyword=&rbx_matchtype=&rbx_send_info=0; rbx-ip2=1; _ga_9HRYHVCY79=GS1.1.1745996040.2.0.1745996040.0.0.0; .ROBLOSECURITY=_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_57DA630B435814445B21A7314A4DE601EA0BDD9F2C1EDBE3B9F6084B59099CD530D1F526D83CBB8DB4BAF709D8BC7898E0C693E54EBD65323DA690EDF99AAC35AF286172978D0BC4CD593F33ABF51CCBD7B13C154F67A39D190DC8FC4C0ACDA92A00736F64409092AF58B6B3ED88BA098D67212F1C43F3522BE993AE65D87A1935F61BD852C895DF56BD3A8EAE74A0F31E8DA361D150FA26E6B42199F41D8A61F857F3EF247D5EC48C15F7DB002FE0F2DF9536D6D0507F61F31AA3663B6479FB490420F4AA5C628CE05A583D2129A216168D4E4A0C28838492CEF19017E83C122F8353A76606C2D44D60912E8C779B1806E5046B064C1D668CCDBB94CD5989D647310F99FE12193E140CB464D8ACCF4F43D619A7AA879C54433B2E0F4ECADD43207294BCAC879695F5C8C8BAE711FC427EB3441882A074770196FEC36930D54534B7F2A2E9D50481A3B2619617C8F97F672007A5EDDE20DE2FC2904505E7EC7B23FA3157B71FA527BC0E260310A9E8DFB438B11898688C06DC9B9BAF83BB31FAA348AB4AF55B4E68D5142240DAAEA18F6DA0AE96A19FFEBCBD2D472636E1F03DAE6DD831C48093193A96A3041FF9F418C625C168E73524F4B0C0B2BF71DD0B413DEDC8F88ADD63E9476EBCDC89C042A8BF77EDDA894DFA8EF9358CFA028EE70CEC20C99FE63B8C511A67E3976BCB956B34F121E46D5262456708D03114758AD9F1E5F5810234963BCBACC063D32CB1736978ACDF9DD1C4568B3F02AE968569B2C0860777637FB70853D9726E9ED5D7940044625674329B91FE8F1EF67E20E695F9F077B05210567787D948214C4E85BD6BC76BC252DF54129F230036D786FCF150845FEF93291428F260F0642A4B98A027FCF10CD9FCF3E2D3D04BAD2BED32EC93B42ECF5603F78241E710AF4E482048E1CB1EC76C714F7B2E1149713CD5094E179F0CD8771E6C839A19E5B844DC51D803D8C5A0C6FE6AAE395731CF4CA0F9AFB509D8198FF50280BDF1CDB179CC816FCF9D723B6E0018C3AB166DC9C0FFA2936AEF58EA91CF78CEA1206F1980741EAE69F6BE4B0F33763C9C394A8446223ED7735CC0DF21331C70A16B8D936E210CEF8C12A511DEEB1143B6CEE82D1A5B0735C6BAB2A7; rbxas=8b5e7da292f310b46e8cc1928419fa20d6305f2b580a08286cb07ebae8317930; RBXEventTrackerV2=CreateDate=04/30/2025 02:00:10&rbxid=8218803200&browserid=1743168939575001; RBXSessionTracker=sessionid=82b40579-2fe3-4388-a877-4d1e7d0abe3f"
+
+# 初始化 Session
+session = requests.Session()
+session.cookies.set('.ROBLOSECURITY', ROBLOSECURITY, domain='.roblox.com')
+session.headers.update({
+    'User-Agent': 'Roblox/WinInet',
+    'Referer': 'https://www.roblox.com'
+})
+
+def get_csrf_token():
+    """ 获取 X-CSRF-TOKEN """
+    resp = session.post("https://auth.roblox.com/v2/logout")
+    token = resp.headers.get('x-csrf-token')
+    if not token:
+        print("[!] 获取 CSRF Token 失败。请检查 Cookie 是否有效。")
+        print("状态码:", resp.status_code, "响应内容:", resp.text)
+        return None
+    session.headers['X-CSRF-TOKEN'] = token
+    print("[+] 获取 CSRF Token 成功")
+    return token
+
+def extract_user_id(url):
+    """ 从用户资料链接中提取 ID """
+    match = re.search(r'/users/(\d+)/', url)
+    if match:
+        return match.group(1)
+    return None
+
+def follow_user(user_id):
+    """ 发起关注请求 """
+    url = f"https://friends.roblox.com/v1/users/{user_id}/follow"
+    resp = session.post(url)
+    if resp.status_code == 200:
+        print(f"[+] 成功关注用户 {user_id}")
+    else:
+        print(f"[!] 关注失败: 状态码 {resp.status_code}, 响应: {resp.text}")
+
+if __name__ == "__main__":
+    print("Roblox 自动关注脚本，输入用户资料链接进行关注。输入 q 退出。")
+    if not get_csrf_token():
+        exit(1)
+
+    while True:
+        try:
+            url = input("请输入用户链接 (或输入 q 退出): ").strip()
+            if url.lower() == 'q':
+                break
+            user_id = extract_user_id(url)
+            if user_id:
+                follow_user(user_id)
+            else:
+                print("[!] 无法解析用户 ID，请检查链接格式")
+        except KeyboardInterrupt:
+            break
