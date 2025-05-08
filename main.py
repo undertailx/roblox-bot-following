@@ -4,79 +4,105 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import random
+import logging
 
-# รับข้อมูลจากผู้ใช้ (Prompt user for input)
-putBrowser = input("Please enter the number to choose your browser (1 Chrome, 2 Safari, 3 Firefox, 4 Edge): ")
-putUsername = input("Type your Roblox Account username here: ")
-putPassword = input("Type Roblox Account Password here: ")
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# เลือกเบราว์เซอร์ที่ต้องการใช้งาน (Select the browser based on user input)
-match putBrowser:
-    case "1":
-        print("Ok. Starting Chrome... ")
-        browser = webdriver.Chrome()  # เปิดเบราว์เซอร์ Chrome
-    case "2":
-        print("Ok. Starting Safari... ")
-        browser = webdriver.Safari()  # เปิดเบราว์เซอร์ Safari
-    case "3":
-        print("Ok. Starting Firefox... ")
-        browser = webdriver.Firefox()  # เปิดเบราว์เซอร์ Firefox
-    case "4":
-        print("Ok. Starting Edge... ")
-        browser = webdriver.Edge()  # เปิดเบราว์เซอร์ Edge
-    case _:
-        print("Unknown browser!")  # หากเลือกเบราว์เซอร์ไม่ถูกต้อง จะหยุดโปรแกรม
-        exit()
-
-# เข้าสู่ระบบ Roblox (Navigate to the Roblox login page)
-print("Logging in... ")
-browser.get("https://roblox.com/login")
-
-# รอให้ input field สำหรับ username และ password โหลดขึ้นมา (Wait for the username and password fields to load)
-WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "login-username")))
-username = browser.find_element(By.ID, "login-username")  # หา input field สำหรับ username
-password = browser.find_element(By.ID, "login-password")  # หา input field สำหรับ password
-
-# กรอก username และ password (Enter the username and password into the respective fields)
-username.send_keys(putUsername)
-password.send_keys(putPassword)
-
-# คลิกปุ่มล็อกอิน (Click the login button)
-loginBtn = browser.find_element(By.ID, "login-button")
-loginBtn.click()
-
-# รอให้เข้าสู่ระบบสำเร็จ (Wait for the login process to complete)
-time.sleep(10)
-
-# ลูปสำหรับการติดตามผู้ใช้แบบสุ่ม (Loop for following a random user)
-while True:
-    # สุ่มเลือก ID ผู้ใช้ (Randomly select a user ID)
-    idRandom = random.randint(100000000, 1000000000)  # สามารถปรับช่วง ID ได้ตามต้องการ (Adjust the ID range as needed)
-    print("Following user with ID:", idRandom)
-
-    # เข้าหน้าของผู้ใช้ที่ต้องการติดตาม (Go to the user's page that we want to follow)
-    browser.get(f"https://roblox.com/users/{idRandom}")
-
+def wait_and_click(browser, by, value, timeout=10):
     try:
-        # รอให้ตัวเลือกผู้ใช้โหลดขึ้นมา (Wait for the user options to load)
-        WebDriverWait(browser, 10).until(
-            EC.element_to_be_clickable((By.ID, "popover-link"))
+        element = WebDriverWait(browser, timeout).until(
+            EC.element_to_be_clickable((by, value))
         )
-        userOptions = browser.find_element(By.ID, "popover-link")
-        userOptions.click()  # คลิกที่ตัวเลือกของผู้ใช้ (Click on the user options)
-        time.sleep(2)
-
-        # หาปุ่ม Follow โดยใช้ XPath (Find the Follow button using XPath)
-        followUser = WebDriverWait(browser, 10).until(
-        EC.element_to_be_clickable((By.XPATH, "//a[@role='menuitem' and @tabindex='-1' and contains(@href, '#')]"))
-        )
-
-
-        followUser.click()  # คลิกปุ่ม Follow (Click the Follow button)
-        print("FOLLOWED! Moving to next random ID...")
-
+        time.sleep(random.uniform(1, 2))
+        element.click()
+        return True
     except Exception as e:
-        print("Could not follow user with ID:", idRandom, "Error:", e)  # แสดงข้อความหากไม่สามารถติดตามผู้ใช้ได้ (Print error if unable to follow the user)
+        logger.error(f"Error clicking element: {str(e)}")
+        return False
 
-    # หน่วงเวลา 3 วินาทีก่อนสุ่มติดตามผู้ใช้ถัดไป (Wait for 3 seconds before following the next user)
-    time.sleep(3)
+def follow_user(browser, user_id):
+    try:
+        # Navigate to user profile
+        browser.get(f"https://roblox.com/users/{user_id}")
+        time.sleep(random.uniform(2, 3))
+        
+        # Click the More button using the specific class names
+        more_button = WebDriverWait(browser, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, 
+                'button.profile-header-dropdown[aria-label="See More"]'))
+        )
+        more_button.click()
+        time.sleep(random.uniform(1, 2))
+        
+        # Click the follow button using the specific follow button XPath
+        follow_button = WebDriverWait(browser, 10).until(
+           EC.element_to_be_clickable((By.XPATH, '//*[@id="follow-button"]'))
+        )
+        follow_button.click()
+        return True
+        
+    except Exception as e:
+        return False
+
+def main():
+    try:
+        browser_choice = input("Choose browser (1 Chrome, 2 Safari, 3 Firefox, 4 Edge): ")
+        username = input("Roblox Username: ")
+        password = input("Roblox Password: ")
+        
+        browsers = {
+            "1": ("Chrome", webdriver.Chrome),
+            "2": ("Safari", webdriver.Safari),
+            "3": ("Firefox", webdriver.Firefox),
+            "4": ("Edge", webdriver.Edge)
+        }
+        
+        if browser_choice not in browsers:
+            raise ValueError("Invalid browser selection!")
+            
+        browser_name, browser_class = browsers[browser_choice]
+        logger.info(f"Opening {browser_name}...")
+        browser = browser_class()
+        
+        # Login
+        logger.info("Logging in...")
+        browser.get("https://roblox.com/login")
+        
+        username_field = WebDriverWait(browser, 10).until(
+            EC.presence_of_element_located((By.ID, "login-username"))
+        )
+        password_field = browser.find_element(By.ID, "login-password")
+        
+        username_field.send_keys(username)
+        password_field.send_keys(password)
+        
+        login_button = browser.find_element(By.ID, "login-button")
+        login_button.click()
+        
+        time.sleep(3)
+        
+        # Main loop
+        while True:
+            try:
+                user_id = random.randint(100000000, 1000000000)
+                if follow_user(browser, user_id):
+                    time.sleep(1)
+                else:
+                    time.sleep(1)
+                    
+            except KeyboardInterrupt:
+                logger.info("\nStopping program...")
+                break
+            except Exception as e:
+                time.sleep(2)
+                
+    except Exception as e:
+        logger.error(f"Critical error: {str(e)}")
+    finally:
+        if 'browser' in locals():
+            browser.quit()
+            logger.info("Browser closed")
+
+if __name__ == "__main__":
+    main()
